@@ -5,34 +5,27 @@ date: "Friday, April 17, 2015"
 output: html_document
 keep_md: true
 ---
-```{r}
+###Configure R environment  
+```{r config, message=FALSE}
 library(knitr)
-knitr::opts_chunk$set(echo=TRUE, fig.path='figure/plot-', cache=TRUE)
-```
-###Prep working environment  
-
-```{r message=FALSE}
 library(lubridate)
 library(ggplot2)
 library(reshape2)
 library(dplyr)
-```
+knitr::opts_chunk$set(echo=TRUE, fig.path='figure/plot-', cache=FALSE)
 
-###Loading and preprocessing the data
-
-Before we begin to analyze our data, it's essential that we process and prepare our dataset. Of course, we must read the data into our working environment.
-
-The activity.zip file can be found at the following URL: 
-
-```{r}
 fileUrl<-"https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
 ```
 
+###Load and process data
+
+Before we begin to analyze our data, it's essential that we process and prepare our dataset. Of course, we must read the data into our working environment.
+
 Our code first scans the working directory, ensuring the file is not already
 available. It then downloads the file if necessary, then reads the file into 
-our working variable: activity.
+the activity variable.
 
-```{r}
+```{r data import}
 if(!("activity.zip" %in% list.files())) {
         download.file(url=fileUrl, destfile="activity.zip", mode="wb")
         unzip("activity.zip")
@@ -42,7 +35,7 @@ activity<-read.csv("activity.csv")
 ```
 
 
-```{r, echo=FALSE}
+```{r formatting, echo=FALSE}
 activity$date<-ymd(activity$date)
 ```
 
@@ -86,11 +79,15 @@ sum(!complete.cases(activity))
 
 ```{r}
 lookup<-c
+
 f <- activity[(!complete.cases(activity)),]
 row.names(f) <- NULL
+
 f2 <- merge(f,lookup,by="interval")
 names(f2)[4] <- "steps"
+
 f2 <- arrange(select(f2, steps, date, interval), date, interval)
+
 activity[(!complete.cases(activity)), ] <- f2
 ```
 
@@ -108,6 +105,26 @@ median(d1$steps)
 ###Are there differences in activity patterns between weekdays and weekends?
 
 ```{r}
-wdays <- mutate(activity, weekday = factor(weekdays(date) %in% c("Saturday", "Sunday"), labels=c("weekend", "weekday")))
+wdays <- mutate(a1, weekday = factor(weekdays(date) %in% c("Saturday", "Sunday"), labels=c("weekday", "weekend")))
+w<-dcast(wdays[(wdays$weekday=="weekday"),], interval ~ variable, mean, na.rm=TRUE)
+wend<-dcast(wdays[(wdays$weekday=="weekend"),], interval ~ variable, mean, na.rm=TRUE)
+w<-mutate(w,group="weekday")
+wend<-mutate(wend,group="weekend")
+wtest<-arrange(rbind(w,wend),interval)
 ```
+
+```{r}
+library(lattice)
+xyplot(steps ~ interval | group, data = wtest, type="l", xlab = "Five-minute Intervals", aspect=0.75, layout=c(2,1))
+
+```
+
+
+
+
+
+
+
+
+
 
