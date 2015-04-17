@@ -1,10 +1,11 @@
 ---
-title: "Peer Assessment 1"
+title: "Reproducible Research: Peer Assessment 1"
 author: "Davis Clark"
 date: "Friday, April 17, 2015"
-output: html_document
+output:html_document
+        keep_md: true
 ---
-```{r echo=FALSE}
+```{r echo=TRUE, message=FALSE}
 library(lubridate)
 library(ggplot2)
 library(reshape2)
@@ -38,7 +39,6 @@ activity<-read.csv("activity.csv")
 activity$date<-ymd(activity$date)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
 ## What is mean total number of steps taken per day?
 
@@ -48,7 +48,7 @@ b<-dcast(a, date ~ variable, sum)
 ```
 
 
-```{r}
+```{r echo=FALSE}
 qplot(steps, data=b, geom="histogram")
 ```
 
@@ -64,8 +64,8 @@ c<-dcast(a, interval ~ variable, mean, na.rm=TRUE)
 c<-arrange(c, interval)
 ```
 
-```{r}
-plot(c$interval,c$steps,type="l")
+```{r echo=FALSE}
+qplot(c$interval,c$steps,geom="line")
 c[(c$steps==max(c$steps)),]
 ```
 
@@ -91,7 +91,7 @@ a1<-melt(activity, measure.vars="steps")
 d1<-dcast(a1, date ~ variable, sum)
 ```
 
-```{r}
+```{r echo=FALSE}
 qplot(steps, data=d1, geom="histogram")
 mean(d1$steps)
 median(d1$steps)
