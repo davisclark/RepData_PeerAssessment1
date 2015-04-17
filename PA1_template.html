@@ -67,10 +67,15 @@ img {
 </div>
 
 
+<pre class="r"><code>library(knitr)
+knitr::opts_chunk$set(echo=TRUE, fig.path='figure/plot-', cache=TRUE)</code></pre>
+<div id="prep-working-environment" class="section level3">
+<h3>Prep working environment</h3>
 <pre class="r"><code>library(lubridate)
 library(ggplot2)
 library(reshape2)
 library(dplyr)</code></pre>
+</div>
 <div id="loading-and-preprocessing-the-data" class="section level3">
 <h3>Loading and preprocessing the data</h3>
 <p>Before we begin to analyze our data, it’s essential that we process and prepare our dataset. Of course, we must read the data into our working environment.</p>

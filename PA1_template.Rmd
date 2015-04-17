@@ -5,12 +5,19 @@ date: "Friday, April 17, 2015"
 output: html_document
 keep_md: true
 ---
-```{r echo=TRUE, message=FALSE}
+```{r}
+library(knitr)
+knitr::opts_chunk$set(echo=TRUE, fig.path='figure/plot-', cache=TRUE)
+```
+###Prep working environment  
+
+```{r message=FALSE}
 library(lubridate)
 library(ggplot2)
 library(reshape2)
 library(dplyr)
 ```
+
 ###Loading and preprocessing the data
 
 Before we begin to analyze our data, it's essential that we process and prepare our dataset. Of course, we must read the data into our working environment.
@@ -48,7 +55,7 @@ b<-dcast(a, date ~ variable, sum)
 ```
 
 
-```{r echo=FALSE}
+```{r histogram with missing values, echo=FALSE}
 qplot(steps, data=b, geom="histogram")
 ```
 
@@ -64,7 +71,7 @@ c<-dcast(a, interval ~ variable, mean, na.rm=TRUE)
 c<-arrange(c, interval)
 ```
 
-```{r echo=FALSE}
+```{r average steps, echo=FALSE}
 qplot(c$interval,c$steps,geom="line")
 c[(c$steps==max(c$steps)),]
 ```
@@ -92,7 +99,7 @@ a1<-melt(activity, measure.vars="steps")
 d1<-dcast(a1, date ~ variable, sum)
 ```
 
-```{r echo=FALSE}
+```{r histogram without missing values, echo=FALSE}
 qplot(steps, data=d1, geom="histogram")
 mean(d1$steps)
 median(d1$steps)
