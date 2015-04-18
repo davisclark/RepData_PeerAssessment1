@@ -74,15 +74,16 @@ library(lubridate)
 library(ggplot2)
 library(reshape2)
 library(dplyr)
-knitr::opts_chunk$set(echo=TRUE, fig.path='figure/plot-', cache=FALSE)
 
-fileUrl&lt;-&quot;https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip&quot;</code></pre>
+knitr::opts_chunk$set(echo=TRUE, fig.path='figure/plot-', cache=FALSE)</code></pre>
 </div>
 <div id="load-and-process-data" class="section level3">
 <h3>Load and process data</h3>
 <p>Before we begin to analyze our data, it’s essential that we process and prepare our dataset. Of course, we must read the data into our working environment.</p>
 <p>Our code first scans the working directory, ensuring the file is not already available. It then downloads the file if necessary, then reads the file into the activity variable.</p>
-<pre class="r"><code>if(!(&quot;activity.zip&quot; %in% list.files())) {
+<pre class="r"><code>fileUrl&lt;-&quot;https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip&quot;
+
+if(!(&quot;activity.zip&quot; %in% list.files())) {
         download.file(url=fileUrl, destfile=&quot;activity.zip&quot;, mode=&quot;wb&quot;)
         unzip(&quot;activity.zip&quot;)
 }
