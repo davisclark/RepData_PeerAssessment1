@@ -17,48 +17,49 @@ knitr::opts_chunk$set(echo = TRUE, fig.path = 'figure/plot-', cache = FALSE)
 ```
 
 ###Load and process data
-
 Before we begin to analyze our data, it's essential that we process and prepare our dataset. Of course, to do so, we must first store the dataset in-memory.
 
 The following code will scan the current working directory to check whether the necessary file is present. 
 If it is not, it downloads the file from the provided URL before continuing to process. If the file is present, the file is passed to read.csv() and stored within the "active" object. 
 
 ```{r data import}
-fileUrl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+fileUrl <- "http://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
 
 if(!("activity.zip" %in% list.files())) {
-        download.file(fileUrl, "activity.zip", mode="wb")
+        download.file(fileUrl, "activity.zip")
         unzip("activity.zip")
 }
 
-activity <- read.csv("activity.csv")
+activity <- read.csv("./activity.csv")
 ```
 
-Process/transform the data (if necessary) into a format suitable for your 
-analysis
+After transforming the date column into the date data type, we then use the reshape2 package to melt the data frame and create two additional dataframes, which:
+
+* dailyTotal summarizes our activity data by computing the sum of our daily steps
+* meanInterval summarizes our activity data by computing the mean of each interval over the two-month period of data
 
 ```{r formatting}
 activity$date <- ymd(activity$date)
 
 activityMelt <- melt(activity, measure.vars = "steps")
-
-dailyTotal <- dcast(activityMelt, date ~ variable, sum)
-meanInterval <- arrange(dcast(activityMelt, interval ~ variable, mean, na.rm = TRUE), interval)
 ```
-### What is mean total number of steps taken per day?
 
+### What is mean total number of steps taken per day?
 For this part of the assignment, you can ignore the missing values in
 the dataset.
 
-1. Make a histogram of the total number of steps taken each day
+The total amount of steps taken daily can be found by running dcast on activityMelt:
+```{r}
+dailyTotal <- dcast(activityMelt, date ~ variable, sum)
+```
 
+We can then plot the frequency of daily total steps using ggplot2's histogram functionality:
 
 ```{r histogram with missing values}
 ggplot(dailyTotal, aes(x=steps)) + geom_histogram()
 ```
 
-2. Calculate and report the **mean** and **median** total number of steps taken 
-per day
+Running the mean and median functions on the dailyTotal steps vector (while ignoring NA values) returns:
 
 ```{r}
 mean(dailyTotal$steps, na.rm = TRUE)
@@ -66,38 +67,33 @@ median(dailyTotal$steps, na.rm = TRUE)
 ```
 
 ### What is the average daily activity pattern?
+To find the average daily activity pattern, we can again summarize our activity datafram by way of melt and dcast:
 
-1. Make a time series plot (i.e. `type = "l"`) of the 5-minute interval 
-(x-axis) and the average number of steps taken, averaged across all days 
-(y-axis)
+```{r}
+meanInterval <- arrange(dcast(activityMelt, interval ~ variable, mean, na.rm = TRUE), interval)
+```
+
+Using the ggplot2 line type, the average daily activity pattern is plotted by interval:
 
 ```{r average steps}
 ggplot(meanInterval, aes(interval, steps)) + geom_line()
 ```
 
-2. Which 5-minute interval, on average across all the days in the dataset, 
-contains the maximum number of steps?
+Although our timeseries visualization gives us an excellent view of the data's overall shape, we'll run the max function on the vector to pinpoint the specific, related values:
 
 ```{r}
 meanInterval[(meanInterval$steps == max(meanInterval$steps)), 1]
 ```
 
 ###Imputing missing values
-1. Calculate and report the total number of missing values in the dataset (i.e. 
-the total number of rows with `NA`s)
+Complete.cases returns a logical vector that indicates the rows, or observations, that are complete (i.e. no missing values.) When negated, this vector provides the location of every row that is incomplete (i.e. missing a value.) 
 
-Missing value:
+Adding the values of the negated vector (which is filled with '0's and '1's), we find the number of rows missing a value in at least one place:
 ```{r}
 sum(!complete.cases(activity))
 ```
 
-2. Devise a strategy for filling in all of the missing values in the dataset. 
-The strategy does not need to be sophisticated. For example, you could use the 
-mean/median for that day, or the mean for that 5-minute interval, etc.
-
-3. Create a new dataset that is equal to the original dataset but with the 
-missing data filled in.
-
+Using the same negated vector, we can subset our activity set to obtain a dataframe filled exclusively with incomplete observations. After merging this dataframe with the set of average interval values calculated earler, we can fill the missing values with the average value respective the interval and inject our adjusted dataframe into our original activity frame: 
 ```{r}
 fillByIntervalMeans <- arrange(select(merge(activity[(!complete.cases(activity)), ], meanInterval, by = "interval"), steps.y, date, interval), date, interval)
 names(fillByIntervalMeans)[1] <- "steps"
@@ -108,8 +104,7 @@ activityMelt <- melt(activity, measure.vars = "steps")
 dailyTotal <- dcast(activityMelt, date ~ variable, sum)
 ```
 
-4. Make a histogram of the total number of steps taken each day and Calculate 
-and report the **mean** and **median** total number of steps taken per day. 
+An adjusted histogram, mean, and median can now be found:
 
 ```{r histogram without missing values}
 ggplot(dailyTotal, aes(x=steps)) + geom_histogram()
@@ -117,16 +112,11 @@ ggplot(dailyTotal, aes(x=steps)) + geom_histogram()
 mean(dailyTotal$steps)
 median(dailyTotal$steps)
 ```
-Do these values differ from the estimates from the first part of the assignment? 
-What is the impact of imputing missing data on the estimates of the total daily 
-number of steps?
+
+Although the mean statistic remains equivalent to the mean value previously calculated, our median statistic is slightly greater than our median calculated earlier and is now equal to our mean. This is to be expected, as the exclusion of NA values from consideration will skew the 50th percentile, despite the relatively insignficant impact on the mean. 
 
 ###Are there differences in activity patterns between weekdays and weekends?
-
-For this part the `weekdays()` function may be of some help here. Use
-the dataset with the filled-in missing values for this part.
-
-1. Create a new factor variable in the dataset with two levels -- "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
+We first create our new factor variable, using weekdays() to return the date day of the week. We can split the dataframe in two, based upon our new factor, calculate the mean of each 5-minute interval, and rbind the sets into one dataframe again:
 
 ```{r}
 week <- mutate(activityMelt, weekday = factor(weekdays(date) %in% c("Saturday", "Sunday"), labels = c("weekday", "weekend")))
@@ -137,45 +127,10 @@ weekend <- mutate(dcast(week[(week$weekday == "weekend"), ], interval ~ variable
 week <- arrange(rbind(weekday, weekend), interval)
 ```
 
-1. Make a panel plot containing a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
+And thanks to our new factor, plotting the set proves simple:
 
 ```{r}
 ggplot(week, aes(interval, steps)) + geom_line() + facet_grid(group ~ .)
 ```
-
-## Submitting the Assignment
-
-To submit the assignment:
-
-1. Commit your completed `PA1_template.Rmd` file to the `master` branch of your git repository (you should already be on the `master` branch unless you created new ones)
-
-2. Commit your `PA1_template.md` and `PA1_template.html` files produced by processing your R markdown file with the `knit2html()` function in R (from the **knitr** package)
-
-3. If your document has figures included (it should) then they should have been placed in the `figure/` directory by default (unless you overrode the default). Add and commit the `figure/` directory to your git repository.
-
-4. Push your `master` branch to GitHub.
-
-5. Submit the URL to your GitHub repository for this assignment on the course web site.
-
-In addition to submitting the URL for your GitHub repository, you will
-need to submit the 40 character SHA-1 hash (as string of numbers from
-0-9 and letters from a-f) that identifies the repository commit that
-contains the version of the files you want to submit. You can do this
-in GitHub by doing the following:
-
-1. Go into your GitHub repository web page for this assignment
-
-2. Click on the "?? commits" link where ?? is the number of commits you have in the repository. For example, if you made a total of 10 commits to this repository, the link should say "10 commits".
-
-3. You will see a list of commits that you have made to this repository. The most recent commit is at the very top. If this represents the version of the files you want to submit, then just click the "copy to clipboard" button on the right hand side that should appear when you hover over the SHA-1 hash. Paste this SHA-1 hash into the course web site when you submit your assignment. If you don't want to use the most recent commit, then go down and find the commit you want and copy the SHA-1 hash.
-
-A valid submission will look something like (this is just an **example**!)
-
-```r
-https://github.com/rdpeng/RepData_PeerAssessment1
-
-7c376cc5447f11537f8740af8e07d6facc3d9645
-```
-
 
 
