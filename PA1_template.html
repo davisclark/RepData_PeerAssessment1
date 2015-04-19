@@ -278,10 +278,11 @@ dailyStepCount &lt;- dcast(activityMelt, date ~ variable, sum)
 
 <p>Although our timeseries gives us an excellent visualization of the data&#39;s overall shape, we&#39;ll run <code>max()</code> on the <code>meanInterval</code> to find the interval with the highest average step count:</p>
 
-<pre><code class="r">meanInterval[(meanInterval$steps == max(meanInterval$steps)), 1]
+<pre><code class="r">meanInterval[(meanInterval$steps == max(meanInterval$steps)), ]
 </code></pre>
 
-<pre><code>## [1] 835
+<pre><code>##     interval    steps
+## 104      835 206.1698
 </code></pre>
 
 <p>###Imputing missing values
@@ -295,7 +296,7 @@ dailyStepCount &lt;- dcast(activityMelt, date ~ variable, sum)
 <pre><code>## [1] 2304
 </code></pre>
 
-<p>Using the same logical vector, we can subset our activity set to obtain a dataframe filled exclusively with incomplete observations. Merging this dataframe with <code>meanInterval</code>, the frame that reveals the average steps per interval, we can fill in the missing values using the respective interval&#39;s average step count: </p>
+<p>Using the same logical vector, we can subset our activity set to obtain a dataframe filled exclusively with incomplete observations. Merging this dataframe with <code>meanInterval</code>, the frame that reveals the average steps per interval, we can fill in the missing values and reinsert the completed rows into the activity dataframe: </p>
 
 <pre><code class="r">fillByIntervalMeans &lt;- arrange(select(merge(activity[(!complete.cases(activity)), ], meanInterval, by = &quot;interval&quot;), steps.y, date, interval), date, interval)
 names(fillByIntervalMeans)[1] &lt;- &quot;steps&quot;

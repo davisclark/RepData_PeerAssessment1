@@ -97,11 +97,12 @@ Although our timeseries gives us an excellent visualization of the data's overal
 
 
 ```r
-meanInterval[(meanInterval$steps == max(meanInterval$steps)), 1]
+meanInterval[(meanInterval$steps == max(meanInterval$steps)), ]
 ```
 
 ```
-## [1] 835
+##     interval    steps
+## 104      835 206.1698
 ```
 
 ###Imputing missing values
@@ -117,7 +118,7 @@ sum(!complete.cases(activity))
 ## [1] 2304
 ```
 
-Using the same logical vector, we can subset our activity set to obtain a dataframe filled exclusively with incomplete observations. Merging this dataframe with `meanInterval`, the frame that reveals the average steps per interval, we can fill in the missing values using the respective interval's average step count: 
+Using the same logical vector, we can subset our activity set to obtain a dataframe filled exclusively with incomplete observations. Merging this dataframe with `meanInterval`, the frame that reveals the average steps per interval, we can fill in the missing values and reinsert the completed rows into the activity dataframe: 
 
 ```r
 fillByIntervalMeans <- arrange(select(merge(activity[(!complete.cases(activity)), ], meanInterval, by = "interval"), steps.y, date, interval), date, interval)

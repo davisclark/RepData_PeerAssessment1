@@ -74,7 +74,7 @@ ggplot(meanInterval, aes(interval, steps)) + geom_line()
 Although our timeseries gives us an excellent visualization of the data's overall shape, we'll run `max()` on the `meanInterval` to find the interval with the highest average step count:
 
 ```{r calculate interval with max mean}
-meanInterval[(meanInterval$steps == max(meanInterval$steps)), 1]
+meanInterval[(meanInterval$steps == max(meanInterval$steps)), ]
 ```
 
 ###Imputing missing values
@@ -85,7 +85,7 @@ A logical vector can be thought of as a collection of 1s and 0s, each indicating
 sum(!complete.cases(activity))
 ```
 
-Using the same logical vector, we can subset our activity set to obtain a dataframe filled exclusively with incomplete observations. Merging this dataframe with `meanInterval`, the frame that reveals the average steps per interval, we can fill in the missing values using the respective interval's average step count: 
+Using the same logical vector, we can subset our activity set to obtain a dataframe filled exclusively with incomplete observations. Merging this dataframe with `meanInterval`, the frame that reveals the average steps per interval, we can fill in the missing values and reinsert the completed rows into the activity dataframe: 
 ```{r impute missing values}
 fillByIntervalMeans <- arrange(select(merge(activity[(!complete.cases(activity)), ], meanInterval, by = "interval"), steps.y, date, interval), date, interval)
 names(fillByIntervalMeans)[1] <- "steps"
